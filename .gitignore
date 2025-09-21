@@ -1,6 +1,8 @@
 # custom
 kontoutskrifter/*
 csv_data/*
+t.py
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

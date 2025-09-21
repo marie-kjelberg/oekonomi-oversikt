@@ -1,0 +1,154 @@
+{
+    "mat": [
+        "Rema",
+        "Meny",
+        "Coop",
+        "Kiwi",
+        "Bunnpris",
+        "Spar",
+        "Joker",
+        "Narvesen",
+        "7-Eleven",
+        "Mix",
+        "Deli de Luca"
+    ],
+    "husholdning": [
+        "Europris",
+        "Clas",
+        "Jernia",
+        "Obs",
+        "Maxbo",
+        "Montér",
+        "Monter",
+        "IKEA",
+        "Biltema",
+        "Plantasjen",
+        "Power",
+        "Elkjøp"
+    ],
+    "hobby": [
+        "Gear4Music",
+        "Google Play",
+        "Ableton",
+        "Steam",
+        "PlayStation",
+        "Xbox",
+        "Outland",
+        "Ark Bokhandel",
+        "Norli",
+        "Amazon",
+        "Zenmarket",
+        "Posten",
+        "Post",
+        "Bring",
+        "Vipps",
+        "Finn.no",
+        "Netflix",
+        "Spotify",
+        "Tidal",
+        "Disney+",
+        "Apple",
+        "Microsoft",
+        "Teknikmagasin",
+        "Aliexpress",
+        "Panduro"
+    ],
+    "transport": [
+        "kollektivt",
+        "Ruter",
+        "Vy",
+        "Entur",
+        "SAS",
+        "Norwegian",
+        "Flytoget",
+        "NSB",
+        "Circle K",
+        "Shell",
+        "Esso",
+        "YX",
+        "St1"
+    ],
+    "self care": [
+        "Zalando",
+        "Bik Bok",
+        "Carlings",
+        "H&M",
+        "Cubus",
+        "Dressmann",
+        "Lindex",
+        "Kicks",
+        "Vita",
+        "Apotek",
+        "Normal",
+        "The Body Shop",
+        "Makeup Mekka",
+        "Fredrik og Louisa",
+        "BliVakker",
+        "Kicks",
+        "Lyko",
+        "Gents",
+        "6008.05.01210"
+    ],
+    "restauranter og kaféer": [
+        "McDonald's",
+        "Burger King",
+        "Peppes",
+        "Dominos",
+        "Egon",
+        "Jordb\u00e6rpikene",
+        "Starbucks",
+        "Espresso House",
+        "Wayne's Coffee"
+    ],
+    "helse": [
+        "SATSELIXIA",
+        "Fresh Fitness",
+        "Fønix",
+        "EVO",
+        "Actic",
+        "Hoff Treningssenter",
+        "Helse",
+        "Tannlege",
+        "Legekontor"
+    ],
+    "ferie": [
+        "Airbnb",
+        "Booking.com",
+        "Hotels.com",
+        "Trip.com",
+        "TUI",
+        "Ving",
+        "Color Line",
+        "Fjord Line",
+        "DFDS"
+    ],
+    "annet": [
+        "Skatteetaten",
+        "Altibox",
+        "Hafslund",
+        "Fortum",
+        "Fjordkraft",
+        "Straksoverføring",
+        "Jernbanesvi",
+        "Varer",
+        "Vare"
+    ],
+    "telefon": [
+        "Ice",
+        "Lyse",
+        "Telia",
+        "Telenor"
+    ],
+    "husleie": [
+        "Studentsamskipnaden"
+    ],
+    "lån": [
+        "Statens Lånekasse"
+    ],
+    "lønn": [
+        "Lønn"
+    ],
+    "bank": [
+        "kort"
+    ]
+}

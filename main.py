@@ -24,11 +24,29 @@ class BaseApp(tk.Tk):
         self.status_text = tk.Text(frame, height=10, width=100)
         self.status_text.pack(pady=5)
 
+        self.processed_files_label = ttk.Label(frame, text="Prosesserte filer: 0")
+        self.processed_files_label.pack(pady=5)
+
         self.files_button = ttk.Button(frame, text="Velg kontoutskrifter", command=self.on_files_button)
         self.files_button.pack(pady=5)
 
         self.clear_csv_btn = ttk.Button(frame, text="Slett CSV-data", command=self.on_clear_csv)
         self.clear_csv_btn.pack(pady=5)
+
+        self.make_graphs_btn = ttk.Button(frame, text="Lag grafer!", command=self.on_make_graphs)
+        self.make_graphs_btn.pack(pady=5)
+
+        self.update_processed_files()
+
+    def update_processed_files(self):
+        processed_files = 0
+        for file in os.listdir(csv_data_path):
+            file_path = os.path.join(csv_data_path, file)
+            if file_path.lower().endswith(".csv"):
+                processed_files += 1
+
+        self.processed_files_label.config(text=f"Prosesserte filer: {processed_files}")
+
 
     def on_files_button(self):
         files = filedialog.askopenfilenames(title="Velg kontoutskrifter", 
@@ -42,13 +60,32 @@ class BaseApp(tk.Tk):
         for file in files:
             status = read_bank.read_eika(file)
             self.status_text.insert(tk.END, status + "\n")
+        
+        self.update_processed_files()
 
     def on_clear_csv(self):
         for file in os.listdir(csv_data_path):
             file_path = os.path.join(csv_data_path, file)
-            os.remove(file_path)
+            if file_path.lower().endswith(".csv"):
+                os.remove(file_path)
         
         self.status_text.insert(tk.END, "Slettet alle CSV-data!")
+        self.update_processed_files()
+
+    def on_make_graphs(self):
+        """ Makes graphs (or something) """
+
+        # honestly, this could be better (it's very redudant)
+        files = []
+        for file in os.listdir(csv_data_path):
+            file_path = os.path.join(csv_data_path, file)
+            if file_path.lower().endswith(".csv"):
+                files.append(file_path)
+    
+        if len(files) != 0:
+            read_csv.graph_everything(files)
+        else: 
+            self.status_text.insert(tk.END, "Kunne ikke lage grafer, da ingen filer er prosesserte!")
 
 def main():
     app = BaseApp()

@@ -1,10 +1,9 @@
 import pandas as pd
 import camelot
-# import re
+import re
 import hashlib
 import os
 
-# date_pattern = r'\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})\b'
 
 def hash_file(file_path, chunk_size = 8192):
     """ Hashes file and checks for dupes in csv_data """
@@ -38,18 +37,19 @@ def read_eika(file_path = None):
     columns = merged_df.iloc[0].to_list()
     if len(columns) != 7:
         return f"Kunne ikke lese fil: {file_path}. Kunne ikke lese riktig tabell!"
-    
-    '''
-    Honestly, this can be done by keeping track of the dates in the csv. 
-    I'm just keeping this here in case that fails
 
-    find_date_period = merged_df[merged_df[0].str.contains("perioden", na=False)]
-    date_period_matches = re.findall(date_pattern, str(find_date_period))
-    if len(date_period_matches) < 2:
-        print(f"Could not find which period this statement is for! File: {file_path}")
-        return
-    print(date_period_matches[:2])
-    '''
+    # should always be present, but I should also do proper checking
+    # ¯\_(ツ)_/¯
+    first_row = merged_df.iloc[0]
+    first_row_str = first_row[0]
+    account_number = re.findall(r"\b\d{4}\.?\d{2}\.?\d{5}\b", first_row_str)
+    if len(account_number) != 0:
+        account_number = account_number[0]
+    else:
+        account_number = re.findall(r'\d{4}\s\d{4}\s\d{3}', first_row_str)
+        if len(account_number) == 0:
+            return f"Kunne ikke finne kontonummer! Fil: {file_path}"
+        account_number = account_number[0]
 
     merged_df.columns = ["Forklaring", "Rentedato", "Ut av konto", "Inn på konto", "Bokført", "Referanse del 1", "Referanse del 2"]
     merged_df = merged_df[
@@ -57,6 +57,7 @@ def read_eika(file_path = None):
         merged_df["Inn på konto"].str.replace(',', '').str.replace('.', '').str.isnumeric()
     ].reset_index(drop=True)
 
+    merged_df.loc[0, "Referanse del 1"] = str(account_number)
     merged_df.to_csv(csv_file_name, index=False)
     return f"Leste og prosesserte filen {file_path}!"
 

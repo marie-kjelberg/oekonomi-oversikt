@@ -8,3 +8,4 @@ Generelle mål:
 - Kunne lese kontoutskrifter fra Eika bra (både saldo, gjeld, osv. fra flere kontoer effektivt)
 - Kunne kategorisere alt på en god måte
 - Lage en struktur hvor du kan lagre alt du har gjort i et "prosjekt", og åpne det senere
+- Rework `read_bank.py`
