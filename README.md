@@ -1,2 +1,2 @@
-# -konomi-oversikt
+# Økonomi-oversikt
 Få oversikt over økonomien din
