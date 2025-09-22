@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import re
 import datetime as dt
+import main
 
 date_pattern = r'\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})\b'
 
@@ -33,39 +34,52 @@ def graph_everything(files: list):
     inn_ut = []
     datoer = []
     referanser = []
-    account_numbers = []
-
+    saldo_inn_ut = []
     for dokument in files:
-        current_account_number = ""
         totalt_inn_måned = Decimal("0")
         totalt_ut_måned = Decimal("0")
-
+        
         current_year = ""
+        current_account_number = ""
         with open(dokument, 'r', newline='') as csvfile:
             csv_reader = csv.reader(csvfile)
             for i, row in enumerate(csv_reader):
-                if i < 1: continue
+                if i == 0: continue
 
                 forklaring = row[0]
                 referanse = row[5] + row[6]
-                if i == 1:
-                    current_year = forklaring.split(".")[2]
-                    dates_trust_me_bro = re.findall(date_pattern, forklaring)[0]
-                    dato = "".join(dates_trust_me_bro[::-1])
-                    acc_number = referanse
-                    
-                    current_account_number = acc_number
-
-                if current_account_number in account_numbers and "Saldo" in forklaring: continue
-                if any(word in forklaring for word in skip_words): continue
-
-                # ugly, ugly
-                if i == 1:
-                    account_numbers.append(acc_number)
-                
                 ut = row[2].replace(".", "").replace(",", ".")
                 inn = row[3].replace(".", "").replace(",", ".")
                 bokført = row[4] 
+
+                # this is stupid
+                if i == 1:
+                    current_year = forklaring.split(".")[2]
+                    dates_trust_me_bro = re.findall(date_pattern, forklaring)[0]
+                    dato = "".join(dates_trust_me_bro[::-1])[:4]
+                    date_month = int(dates_trust_me_bro[1]) + 1
+                    dato += f"{str(date_month).zfill(2) if date_month < 10 else str(date_month)}01"
+                    acc_number = referanse
+                    current_account_number = acc_number
+
+                # this is soooooo uglyyyy
+                if "Saldo" in forklaring and i == 1:
+                    saldo = Decimal("0")
+                    try:
+                        saldo += Decimal(inn)
+                    except: pass
+
+                    try: 
+                        saldo -= Decimal(ut)
+                    except: pass
+                    obj = {"saldo": saldo, "dato": dato,
+                        "account": current_account_number}
+                    
+                    saldo_inn_ut.append(obj)
+                    continue
+
+                if any(word in forklaring for word in skip_words): continue
+                
                 if i != 1:
                     dato = current_year + bokført[2:4] + bokført[0:2]
                 # sjekk om infoen stemmer overens med kategoriene:
@@ -91,6 +105,15 @@ def graph_everything(files: list):
 
                 referanser.append(referanse)
     
+    saldo_sorted = sorted(saldo_inn_ut, key=lambda x: x['dato'])
+    saldo_unique_accounts = []
+    for entry in saldo_sorted:
+        if entry["account"] not in saldo_unique_accounts:
+            saldo_unique_accounts.append(entry["account"])
+            inn_ut.append(entry["saldo"])
+            datoer.append(entry["dato"])
+
+
     paired = list(zip(datoer, inn_ut))
     paired.sort(key=lambda x: int(x[0]))
     sorted_dates, sorted_inn_ut = zip(*paired)
@@ -145,4 +168,4 @@ def graph_everything(files: list):
     plt.show()
 
 if __name__ == "__main__":
-    pass
+    main.main()  # just for debugging rn

@@ -13,7 +13,7 @@ class BaseApp(tk.Tk):
         self.files = []
 
         self.title("Økonomi Styring")
-        self.geometry("700x400")
+        self.geometry("1280x700")
 
         frame = ttk.Frame(self, padding=10)
         frame.pack(fill="both", expand=True)
@@ -21,6 +21,8 @@ class BaseApp(tk.Tk):
         self.title_label = ttk.Label(frame, text="Økonomi styring")
         self.title_label.pack(pady=5)
 
+        self.status_label = ttk.Label(frame, text="Status")
+        self.status_label.pack(pady=5)
         self.status_text = tk.Text(frame, height=10, width=100)
         self.status_text.pack(pady=5)
 
@@ -30,7 +32,7 @@ class BaseApp(tk.Tk):
         self.files_button = ttk.Button(frame, text="Velg kontoutskrifter", command=self.on_files_button)
         self.files_button.pack(pady=5)
 
-        self.clear_csv_btn = ttk.Button(frame, text="Slett CSV-data", command=self.on_clear_csv)
+        self.clear_csv_btn = ttk.Button(frame, text="Slett prosesserte data", command=self.on_clear_csv)
         self.clear_csv_btn.pack(pady=5)
 
         self.make_graphs_btn = ttk.Button(frame, text="Lag grafer!", command=self.on_make_graphs)
@@ -69,7 +71,7 @@ class BaseApp(tk.Tk):
             if file_path.lower().endswith(".csv"):
                 os.remove(file_path)
         
-        self.status_text.insert(tk.END, "Slettet alle CSV-data!")
+        self.status_text.insert(tk.END, "Slettet alle prosesserte data!")
         self.update_processed_files()
 
     def on_make_graphs(self):
