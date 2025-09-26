@@ -6,3 +6,4 @@ Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over 
 Generelle unådde mål: 
 - Lage en struktur hvor du kan lagre alt du har gjort i et "prosjekt", og åpne det senere
 - Rework `read_bank.py`
+- Legg til prosent oversikt
