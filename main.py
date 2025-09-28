@@ -7,6 +7,7 @@ import read_csv
 
 csv_data_path = "./csv_data/"
 
+
 class BaseApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -49,7 +50,6 @@ class BaseApp(tk.Tk):
 
         self.processed_files_label.config(text=f"Prosesserte filer: {processed_files}")
 
-
     def on_files_button(self):
         files = filedialog.askopenfilenames(title="Velg kontoutskrifter", 
             filetypes=(("PDF-filer", "*.pdf"), ("Alle filer", "*.*")))
@@ -89,17 +89,21 @@ class BaseApp(tk.Tk):
         else: 
             self.status_text.insert(tk.END, "Kunne ikke lage grafer, da ingen filer er prosesserte!")
 
+
 def main():
     app = BaseApp()
     app.mainloop()
+
 
 def _debug_read_pdfs():
     """ Debug the pdf-reading thing """
     pass
 
+
 def _debug_read_csv():
     """ Debug the csv-reading thing """
     pass
+
 
 necessary_dirs = ["./csv_data/", "./kontoutskrifter"] 
 if __name__ == "__main__":

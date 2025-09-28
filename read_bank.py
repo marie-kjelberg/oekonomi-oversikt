@@ -3,9 +3,10 @@ import camelot
 import re
 import hashlib
 import os
+import main
 
 
-def hash_file(file_path, chunk_size = 8192):
+def hash_file(file_path, chunk_size=8192):
     """ Hashes file and checks for dupes in csv_data """
     hasher = hashlib.md5() # shouldn't cause any problems to use md5 here
     with open(file_path, "rb") as file:
@@ -58,8 +59,9 @@ def read_eika(file_path = None):
     ].reset_index(drop=True)
 
     merged_df.loc[0, "Referanse del 1"] = str(account_number)
-    merged_df.to_csv(csv_file_name, index=False)
+    merged_df.to_csv(csv_file_name, index=False, encoding="utf-8")
     return f"Leste og prosesserte filen {file_path}!"
 
+
 if __name__ == "__main__":
-    pass
+    main.main()

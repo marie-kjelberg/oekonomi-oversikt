@@ -16,15 +16,17 @@ with open(categories_path, "r", encoding="utf-8") as file:
 
 categories = json.loads(categories_string)
 
-def categorize_transaction(transaction: str, categories: dict) -> str:
-        transaction_lower = transaction.lower()
-        for category, keywords in categories.items():
-            for keyword in keywords:
-                if keyword.lower() in transaction_lower:
-                    return category
-        return "uncategorized"
 
-def graph_everything(files: list):
+def categorize_transaction(transaction: str, categories: dict) -> str:
+    transaction_lower = transaction.lower()
+    for category, keywords in categories.items():
+        for keyword in keywords:
+            if keyword.lower() in transaction_lower:
+                return category
+    return "uncategorized"
+
+
+def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.datetime(2050, 1, 1))):
     """ Read the created csv list and graph everything """
 
     skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
@@ -38,13 +40,14 @@ def graph_everything(files: list):
     for dokument in files:
         totalt_inn_måned = Decimal("0")
         totalt_ut_måned = Decimal("0")
-        
+
         current_year = ""
         current_account_number = ""
-        with open(dokument, 'r', newline='') as csvfile:
+        with open(dokument, 'r', newline='', encoding="utf-8") as csvfile:
             csv_reader = csv.reader(csvfile)
             for i, row in enumerate(csv_reader):
-                if i == 0: continue
+                if i == 0 or "Dato:" in row[0]:
+                    continue
 
                 forklaring = row[0]
                 referanse = row[5] + row[6]
@@ -62,23 +65,34 @@ def graph_everything(files: list):
                     acc_number = referanse
                     current_account_number = acc_number
 
+                if "Saldo fra kontoutskrift" in forklaring:  # dette setter ikke datoene riktig
+                    date_find = re.findall(date_pattern, forklaring)[0]
+                    current_year = date_find[2]
+                    dato = date_find[2] + date_find[1] + date_find[0]
+                    print(current_year, dato)
+                    # continue
+
                 # this is soooooo uglyyyy
-                if "Saldo" in forklaring and i == 1:
+                if "Saldo" in forklaring:  # and i == 1:
                     saldo = Decimal("0")
                     try:
                         saldo += Decimal(inn)
-                    except: pass
+                    except Exception:
+                        pass
 
-                    try: 
+                    try:
                         saldo -= Decimal(ut)
-                    except: pass
+                    except Exception:
+                        pass
+                        
                     obj = {"saldo": saldo, "dato": dato,
-                        "account": current_account_number}
+                           "account": current_account_number}
                     
                     saldo_inn_ut.append(obj)
                     continue
 
-                if any(word in forklaring for word in skip_words): continue
+                if any(word in forklaring for word in skip_words):
+                    continue
                 
                 if i != 1:
                     dato = current_year + bokført[2:4] + bokført[0:2]
@@ -96,15 +110,19 @@ def graph_everything(files: list):
                     totalt_ut_måned += Decimal(ut)
                     inn_ut.append(Decimal("-" + ut))
                     datoer.append(dato)
-                except: pass
+                except Exception:
+                    pass
                 try:
                     totalt_inn_måned += Decimal(inn)
                     inn_ut.append(Decimal(inn))
                     datoer.append(dato)
-                except: pass
+                except Exception:
+                    pass
 
                 referanser.append(referanse)
-    
+                if dato == "2024":
+                    print(f"Forklaring: {forklaring}, ref: {referanse}, dato: {dato}")
+
     saldo_sorted = sorted(saldo_inn_ut, key=lambda x: x['dato'])
     saldo_unique_accounts = []
     for entry in saldo_sorted:
@@ -113,19 +131,26 @@ def graph_everything(files: list):
             inn_ut.append(entry["saldo"])
             datoer.append(entry["dato"])
 
-
     paired = list(zip(datoer, inn_ut))
     paired.sort(key=lambda x: int(x[0]))
     sorted_dates, sorted_inn_ut = zip(*paired)
     datoer = list(sorted_dates)
     inn_ut = list(sorted_inn_ut)
 
+    datoer = [dt.datetime.strptime(str(d), "%Y%m%d") for d in datoer]
     for i, value in enumerate(inn_ut):
         if i == 0:
             continue
 
         inn_ut[i] = inn_ut[i-1] + value
-    datoer = [dt.datetime.strptime(str(d), "%Y%m%d") for d in datoer]
+
+    # find the cutoff date
+    start_i = min(range(len(datoer)), key=lambda i: abs(datoer[i] - duration[0]))
+    end_i = min(range(len(datoer)), key=lambda i: abs(datoer[i] - duration[1]))
+    datoer = datoer[start_i:end_i]
+    inn_ut = inn_ut[start_i:end_i]
+
+    print(list(zip(datoer, inn_ut)))
     plt.plot(datoer, inn_ut)
     plt.fill_between(datoer, inn_ut, alpha=0.3)
     plt.xticks(rotation=45)
@@ -137,13 +162,12 @@ def graph_everything(files: list):
 
     categories_keys = list(category_counts.keys())
     counts = list(category_counts.values())
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(8, 5))
     plt.bar(categories_keys, counts, color='skyblue')
     plt.xticks(rotation=45)
     plt.title("Utgifter etter kategori")
     plt.xlabel("Kategori")
     plt.ylabel("NOK")
-    #plt.show()
 
     # normalise this for a 30 day period
     thrity_day_norm = {}
@@ -166,6 +190,7 @@ def graph_everything(files: list):
     plt.xlabel("Kategori")
     plt.ylabel("NOK")
     plt.show()
+
 
 if __name__ == "__main__":
     main.main()  # just for debugging rn
