@@ -26,7 +26,7 @@ def categorize_transaction(transaction: str, categories: dict) -> str:
     return "uncategorized"
 
 
-def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.datetime(2050, 1, 1))):
+def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
     """ Read the created csv list and graph everything """
 
     skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
@@ -69,21 +69,14 @@ def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.dateti
                     date_find = re.findall(date_pattern, forklaring)[0]
                     current_year = date_find[2]
                     dato = date_find[2] + date_find[1] + date_find[0]
-                    print(current_year, dato)
+                    # print(current_year, dato)
                     # continue
-
-                # this is soooooo uglyyyy
-                if "Saldo" in forklaring:  # and i == 1:
                     saldo = Decimal("0")
-                    try:
+                    if inn != "":
                         saldo += Decimal(inn)
-                    except Exception:
-                        pass
 
-                    try:
+                    if ut != "":
                         saldo -= Decimal(ut)
-                    except Exception:
-                        pass
                         
                     obj = {"saldo": saldo, "dato": dato,
                            "account": current_account_number}
@@ -98,7 +91,10 @@ def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.dateti
                     dato = current_year + bokført[2:4] + bokført[0:2]
                 # sjekk om infoen stemmer overens med kategoriene:
                 category = categorize_transaction(forklaring, categories)
-                if ut != "":
+                print(dato)
+                date_now = dt.datetime.strptime(str(dato), "%Y%m%d")
+
+                if ut != "" and duration[0] <= date_now <= duration[1]:
                     if category == "uncategorized":
                         pass  # print(forklaring), kan gjøre noe med dette senere
                     if category not in category_counts:
@@ -106,18 +102,15 @@ def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.dateti
                     else:
                         category_counts[category] += Decimal(ut)
 
-                try:
+                if ut != "":
                     totalt_ut_måned += Decimal(ut)
                     inn_ut.append(Decimal("-" + ut))
                     datoer.append(dato)
-                except Exception:
-                    pass
-                try:
+
+                if inn != "":
                     totalt_inn_måned += Decimal(inn)
                     inn_ut.append(Decimal(inn))
                     datoer.append(dato)
-                except Exception:
-                    pass
 
                 referanser.append(referanse)
                 if dato == "2024":
@@ -150,7 +143,9 @@ def graph_everything(files: list, duration = (dt.datetime(1970, 5, 1), dt.dateti
     datoer = datoer[start_i:end_i]
     inn_ut = inn_ut[start_i:end_i]
 
-    print(list(zip(datoer, inn_ut)))
+    print(category_counts)
+
+    # print(list(zip(datoer, inn_ut)))
     plt.plot(datoer, inn_ut)
     plt.fill_between(datoer, inn_ut, alpha=0.3)
     plt.xticks(rotation=45)
