@@ -8,21 +8,21 @@ import main
 
 def hash_file(file_path, chunk_size=8192):
     """ Hashes file and checks for dupes in csv_data """
-    hasher = hashlib.md5() # shouldn't cause any problems to use md5 here
+    hasher = hashlib.md5()  # shouldn't cause any problems to use md5 here
     with open(file_path, "rb") as file:
         while chunk := file.read(chunk_size):
             hasher.update(chunk)
 
     hash = hasher.hexdigest()
     if os.path.exists(f"./csv_data/{hash}.csv"):
-        return None # the file has already been processed
-    
+        return None  # the file has already been processed
+
     return hash
 
 
-def read_eika(file_path = None):
+def read_eika(file_path=None):
     hash = hash_file(file_path)
-    if hash == None:
+    if hash is None:
         return f"Fil: {file_path} har allerede blitt prosessert!"
     
     csv_file_name = f"./csv_data/{hash}.csv"

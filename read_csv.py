@@ -68,9 +68,10 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
                 if "Saldo fra kontoutskrift" in forklaring:  # dette setter ikke datoene riktig
                     date_find = re.findall(date_pattern, forklaring)[0]
                     current_year = date_find[2]
+                    if date_find[1] == "12":
+                        current_year = str(int(date_find[2]) + 1)
+
                     dato = date_find[2] + date_find[1] + date_find[0]
-                    # print(current_year, dato)
-                    # continue
                     saldo = Decimal("0")
                     if inn != "":
                         saldo += Decimal(inn)
@@ -80,18 +81,15 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
                         
                     obj = {"saldo": saldo, "dato": dato,
                            "account": current_account_number}
-                    
                     saldo_inn_ut.append(obj)
                     continue
 
                 if any(word in forklaring for word in skip_words):
                     continue
                 
-                if i != 1:
-                    dato = current_year + bokført[2:4] + bokført[0:2]
+                dato = current_year + bokført[2:4] + bokført[0:2]
                 # sjekk om infoen stemmer overens med kategoriene:
                 category = categorize_transaction(forklaring, categories)
-                print(dato)
                 date_now = dt.datetime.strptime(str(dato), "%Y%m%d")
 
                 if ut != "" and duration[0] <= date_now <= duration[1]:
@@ -113,8 +111,7 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
                     datoer.append(dato)
 
                 referanser.append(referanse)
-                if dato == "2024":
-                    print(f"Forklaring: {forklaring}, ref: {referanse}, dato: {dato}")
+                # print(f"Forklaring: {forklaring}, ref: {referanse}, dato: {dato}")
 
     saldo_sorted = sorted(saldo_inn_ut, key=lambda x: x['dato'])
     saldo_unique_accounts = []
@@ -143,8 +140,9 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     datoer = datoer[start_i:end_i]
     inn_ut = inn_ut[start_i:end_i]
 
-    print(category_counts)
-
+    # print(category_counts)
+    # møter nå på problemet av at det ikke er noen datapunkter mellom 31 januar 2024, og 30 august 2024.
+    # disse datapunktene har fått feil dato, da jeg ikke har noen dato før august 2024 (tror jeg)
     # print(list(zip(datoer, inn_ut)))
     plt.plot(datoer, inn_ut)
     plt.fill_between(datoer, inn_ut, alpha=0.3)
@@ -178,7 +176,7 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     counts = list(thrity_day_norm.values())
 
     # problemet med dette, er at noen måneder er annerledes enn andre. 
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(8, 5))
     plt.bar(categories_keys, counts, color='skyblue')
     plt.xticks(rotation=45)
     plt.title(f"Utgifter etter kategori (normalisert for 30 dager): {total_30_day:.2f}NOK")
