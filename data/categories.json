@@ -51,7 +51,10 @@
         "Microsoft",
         "Teknikmagasin",
         "Aliexpress",
-        "Panduro"
+        "Panduro",
+        "Disney",
+        "Amzn",
+        "Portico Media Co Ltd"
     ],
     "transport": [
         "kollektivt",
@@ -109,7 +112,9 @@
         "Hoff Treningssenter",
         "Helse",
         "Tannlege",
-        "Legekontor"
+        "Legekontor",
+        "Sykehuset i",
+        "Medical"
     ],
     "ferie": [
         "Airbnb",

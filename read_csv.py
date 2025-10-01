@@ -94,7 +94,7 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
 
                 if ut != "" and duration[0] <= date_now <= duration[1]:
                     if category == "uncategorized":
-                        pass  # print(forklaring), kan gjøre noe med dette senere
+                        print(forklaring)  # , kan gjøre noe med dette senere
                     if category not in category_counts:
                         category_counts[category] = Decimal(ut)
                     else:
