@@ -30,24 +30,16 @@ def categorize_transaction(transaction: str, categories: dict = categories) -> s
 
 def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
     """ The newer version """
-    skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
     category_counts = {}
 
     # for grafen
     inn_ut = []
     datoer = []
-    referanser = []
-    saldo_inn_ut = []
     nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
     # kontonummer er alle koblet til barna sine
     df_list = []
     inngående_saldoer = Decimal("0")
     for dokument in files:
-        totalt_inn_måned = Decimal("0")
-        totalt_ut_måned = Decimal("0")
-        current_year = ""
-        current_acc_number = ""
-
         # for backwards compatibility reasons, Norwegian financial institutions often use this encoding
         df = pl.read_csv(dokument, separator=";", encoding="windows-1252", dtypes={
             "Beløp inn": pl.Decimal(10, 2),
@@ -80,10 +72,22 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     ).sort("Utført dato")
 
     # fjern ubrukelige rows
-    df = df.drop_nulls(subset=["Utført dato"])
+    df: pl.DataFrame = df.drop_nulls(subset=["Utført dato"])
 
-    # jeg klarte ikke å sette inngående saldo først... 
+    # filtrer bort uønskede datoer
+    df = df.filter(duration[0].date() < pl.col("Utført dato"))
+    df = df.filter(duration[1].date() > pl.col("Utført dato"))
 
+    df = df.with_columns(
+        pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
+    )
+
+    df_categories: pl.DataFrame = df.group_by("category").agg(
+        (-1 * pl.sum("Beløp ut") + pl.sum("Beløp inn")).alias("total_amount")
+    ).sort("total_amount")
+    print(df_categories.head())
+
+    # jeg klarte ikke å sette inngående saldo først...
     # finn løpende saldo
     df = df.with_columns(
         ((pl.col("Beløp ut").fill_null(0) + pl.col("Beløp inn").fill_null(0)).cum_sum()).alias("inn_ut")
@@ -93,192 +97,46 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
         (pl.col("inn_ut") + inngående_saldoer).alias("inn_ut")
     )
 
-    df = df.with_columns(
-        pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
-    )
-
-    df_categories: pl.DataFrame = df.group_by("category").agg(
-        pl.sum("inn_ut").alias("total_amount")
-    ).sort("total_amount")
-
     datoer = df["Utført dato"].to_list()
     inn_ut = df["inn_ut"].to_list()
 
-    fig, ax = plt.subplots(1, 2, figsize=(10, 6))
-    ax[0].plot(datoer, inn_ut, label="Saldo i banken")
-    ax[0].fill_between(datoer, inn_ut, alpha=0.3)
-    
-    categories_list = df_categories["category"].to_list()
-    categories_sums = df_categories["total_amount"].to_list()
-    ax[1].bar(categories_list, categories_sums, label="bar chart")
-
-    plt.show()
-
-
-def _graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
-    """ Deprecated: Read the created csv list and graph everything """
-
-    skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
-    category_counts = {}
-
-    # for grafen
-    inn_ut = []
-    datoer = []
-    referanser = []
-    saldo_inn_ut = []
-    nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
-    # kontonummer er alle koblet til barna sine
-    for dokument in files:
-        totalt_inn_måned = Decimal("0")
-        totalt_ut_måned = Decimal("0")
-
-        current_year = ""
-        current_account_number = ""
-        with open(dokument, 'r', newline='', encoding="utf-8") as csvfile:
-            csv_reader = csv.reader(csvfile)
-            for i, row in enumerate(csv_reader):
-                if i == 0 or "Dato:" in row[0]:
-                    continue
-
-                forklaring = row[0]
-                referanse = row[5] + row[6]
-                ut = row[2].replace(".", "").replace(",", ".")
-                inn = row[3].replace(".", "").replace(",", ".")
-                bokført = row[4] 
-
-                # this is stupid
-                if i == 1:
-                    current_year = forklaring.split(".")[2]
-                    dates_trust_me_bro = re.findall(date_pattern, forklaring)[0]
-                    dato = "".join(dates_trust_me_bro[::-1])[:4]
-                    date_month = int(dates_trust_me_bro[1]) + 1
-                    dato += f"{str(date_month).zfill(2) if date_month < 10 else str(date_month)}01"
-                    acc_number = referanse
-                    current_account_number = acc_number
-
-                if "Saldo fra kontoutskrift" in forklaring:  # dette setter ikke datoene riktig
-                    date_find = re.findall(date_pattern, forklaring)[0]
-                    current_year = date_find[2]
-                    if date_find[1] == "12":
-                        current_year = str(int(date_find[2]) + 1)
-
-                    dato = date_find[2] + date_find[1] + date_find[0]
-                    saldo = Decimal("0")
-                    if inn != "":
-                        saldo += Decimal(inn)
-
-                    if ut != "":
-                        saldo -= Decimal(ut)
-                        
-                    obj = {"saldo": saldo, "dato": dato,
-                           "account": current_account_number}
-                    saldo_inn_ut.append(obj)
-                    continue
-
-                if any(word in forklaring for word in skip_words):
-                    continue
-                
-                dato = current_year + bokført[2:4] + bokført[0:2]
-                # sjekk om infoen stemmer overens med kategoriene:
-                category = categorize_transaction(forklaring, categories)
-                print(dato, forklaring, referanse)
-                if "Renter og provisjon" in forklaring or "i år" in forklaring:
-                    dato += "0101"
-
-                if len(dato) != 8:
-                    dato += "0101"
-                    
-                date_now = dt.datetime.strptime(str(dato), "%Y%m%d")
-
-                if ut != "" and duration[0] <= date_now <= duration[1]:
-                    if category == "uncategorized":
-                        print(forklaring)  # , kan gjøre noe med dette senere
-                    if category not in category_counts:
-                        category_counts[category] = Decimal(ut)
-                    else:
-                        category_counts[category] += Decimal(ut)
-
-                if ut != "":
-                    totalt_ut_måned += Decimal(ut)
-                    inn_ut.append(Decimal("-" + ut))
-                    datoer.append(dato)
-
-                if inn != "":
-                    totalt_inn_måned += Decimal(inn)
-                    inn_ut.append(Decimal(inn))
-                    datoer.append(dato)
-
-                referanser.append(referanse)
-                # print(f"Forklaring: {forklaring}, ref: {referanse}, dato: {dato}")
-
-    saldo_sorted = sorted(saldo_inn_ut, key=lambda x: x['dato'])
-    saldo_unique_accounts = []
-    for entry in saldo_sorted:
-        if entry["account"] not in saldo_unique_accounts:
-            saldo_unique_accounts.append(entry["account"])
-            inn_ut.append(entry["saldo"])
-            datoer.append(entry["dato"])
-
-    paired = list(zip(datoer, inn_ut))
-    paired.sort(key=lambda x: int(x[0]))
-    sorted_dates, sorted_inn_ut = zip(*paired)
-    datoer = list(sorted_dates)
-    inn_ut = list(sorted_inn_ut)
-
-    datoer = [dt.datetime.strptime(str(d), "%Y%m%d") for d in datoer]
-    for i, value in enumerate(inn_ut):
-        if i == 0:
-            continue
-
-        inn_ut[i] = inn_ut[i-1] + value
-
-    # find the cutoff date
-    start_i = min(range(len(datoer)), key=lambda i: abs(datoer[i] - duration[0]))
-    end_i = min(range(len(datoer)), key=lambda i: abs(datoer[i] - duration[1]))
-    datoer = datoer[start_i:end_i]
-    inn_ut = inn_ut[start_i:end_i]
-
-    G = nx.Graph()
-    # gå igjennom nodes osv.
-
-    plt.plot(datoer, inn_ut)
+    # ax0 = fig.add_subplot(gs[0, 0])¨
+    plt.figure()
+    plt.plot(datoer, inn_ut, label="Saldo i banken")
     plt.fill_between(datoer, inn_ut, alpha=0.3)
-    plt.xticks(rotation=45)
-    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    plt.title("Banksaldo over tid (NOK)")
     plt.xlabel("Datoer")
     plt.ylabel("NOK")
-    plt.title("Oversikt over total saldo i banken")
 
-    categories_keys = list(category_counts.keys())
-    counts = list(category_counts.values())
-    plt.figure(figsize=(8, 5))
-    plt.bar(categories_keys, counts, color='skyblue')
-    plt.xticks(rotation=45)
-    plt.title("Utgifter etter kategori")
-    plt.xlabel("Kategori")
+    categories_list = df_categories["category"].to_list()
+    categories_sums = df_categories["total_amount"].to_list()
+    # ax1 = fig.add_subplot(gs[0, 1])
+    plt.figure()
+    plt.bar(categories_list, categories_sums, label="bar chart")
+    plt.title("Inn/ut kategorisert")
+    plt.xlabel("Kategorier")
     plt.ylabel("NOK")
 
-    # normalise this for a 30 day period
-    thrity_day_norm = {}
-    start_date, end_date = min(datoer), max(datoer)
-    day_diff = (end_date - start_date).days
-    total_30_day = Decimal("0")
+    plt.figure()
+    G = nx.DiGraph()
+    # nodes burde være fra konto + kategorier. så kan add_adges være de ulike kategoriserte transaksjonene + evt.
+    # til en konto hvis det er der. Hvis det går inn, så kan man heller ha fra deres konto til vår
+    # df_copy = df.clone()
+    df = df.drop_nulls(subset=["Fra konto"])
 
-    for key, count in category_counts.items(): 
-        expense = count * Decimal("30") / Decimal(str(day_diff))
-        thrity_day_norm[key] = expense
-        total_30_day += expense
+    # df_copy.drop_nulls(subset=["Til konto"])
+    # print(df_copy.head())
 
-    counts = list(thrity_day_norm.values())
+    edges = list(zip(df["Fra konto"].to_list(), df["category"].to_list()))
+    G.add_edges_from(edges)
+    pos = nx.spring_layout(G)
+    # ax2 = fig.add_subplot(gs[1, 0])
+    nx.draw(
+        G,
+        pos,
+        with_labels=True,
+    )
 
-    # problemet med dette, er at noen måneder er annerledes enn andre. 
-    plt.figure(figsize=(8, 5))
-    plt.bar(categories_keys, counts, color='skyblue')
-    plt.xticks(rotation=45)
-    plt.title(f"Utgifter etter kategori (normalisert for 30 dager): {total_30_day:.2f}NOK")
-    plt.xlabel("Kategori")
-    plt.ylabel("NOK")
     plt.show()
 
 

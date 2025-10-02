@@ -38,9 +38,6 @@ class BaseApp(tk.Tk):
         self.processed_files_label = ttk.Label(self.right_frame, text="Prosesserte filer: 0")
         self.processed_files_label.pack(pady=5)
 
-        # self.files_button = ttk.Button(self.right_frame, text="Velg kontoutskrifter (PDFer - beta)", command=self.on_files_button)
-        # self.files_button.pack(pady=5)
-
         self.csv_files_btn = ttk.Button(self.right_frame, text="Velg CSVer", command=self.on_csv_button)
         self.csv_files_btn.pack(pady=5)
 
@@ -65,22 +62,6 @@ class BaseApp(tk.Tk):
                 processed_files += 1
 
         self.processed_files_label.config(text=f"Prosesserte filer: {processed_files}")
-
-    def on_files_button(self):
-        files = filedialog.askopenfilenames(
-            title="Velg kontoutskrifter", 
-            filetypes=(("PDF-filer", "*.pdf"), ("Alle filer", "*.*")))
-
-        if not files:
-            self.status_text.insert(tk.END, "Du valgte ingen filer!")
-            return
-        
-        # read the files and convert them to csv's. 
-        for file in files:
-            status = read_bank.read_eika(file)
-            self.status_text.insert(tk.END, status)
-        
-        self.update_processed_files()
 
     def on_csv_button(self):
         files = filedialog.askopenfilenames(
