@@ -1,7 +1,13 @@
 # Økonomi-oversikt
 Få oversikt over økonomien din
 
-Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over ting, samt hva jeg faktisk bruker pengene mine på. Man kan kjøre `main.py` for å starte programmet. Dette programmet er mest tilrettelagt Eika sine kontoutskrifter, men man kan modifisere koden til å tilrettelegge for andre banker sine kontoutskrifter dersom man vil. 
+Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over ting, samt hva jeg faktisk bruker pengene mine på. Man kan kjøre `main.py` for å starte programmet. Dette programmet er mest tilrettelagt Eika sine CSV-filer, men man kan modifisere koden til å tilrettelegge for andre banker dersom man vil. 
+
+## Hvordan få tak i CSV-filene? 
+1. Gå inn på banken
+2. Gå inn på transaksjonsoversikten
+3. Trykk på nedlastningsknappen (ofte et symbol)
+4. Velg "csv-format" eller noe lignene, og last ned
 
 ## Hvordan kjøre programmet? 
 1. Installer Python [her](https://www.python.org/)
