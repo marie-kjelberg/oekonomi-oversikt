@@ -6,6 +6,8 @@ import matplotlib.dates as mdates
 import re
 import datetime as dt
 import main
+import networkx as nx
+import polars as pl
 
 date_pattern = r'\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})\b'
 
@@ -17,7 +19,7 @@ with open(categories_path, "r", encoding="utf-8") as file:
 categories = json.loads(categories_string)
 
 
-def categorize_transaction(transaction: str, categories: dict) -> str:
+def categorize_transaction(transaction: str, categories: dict = categories) -> str:
     transaction_lower = transaction.lower()
     for category, keywords in categories.items():
         for keyword in keywords:
@@ -27,7 +29,94 @@ def categorize_transaction(transaction: str, categories: dict) -> str:
 
 
 def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
-    """ Read the created csv list and graph everything """
+    """ The newer version """
+    skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
+    category_counts = {}
+
+    # for grafen
+    inn_ut = []
+    datoer = []
+    referanser = []
+    saldo_inn_ut = []
+    nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
+    # kontonummer er alle koblet til barna sine
+    df_list = []
+    inngående_saldoer = Decimal("0")
+    for dokument in files:
+        totalt_inn_måned = Decimal("0")
+        totalt_ut_måned = Decimal("0")
+        current_year = ""
+        current_acc_number = ""
+
+        # for backwards compatibility reasons, Norwegian financial institutions often use this encoding
+        df = pl.read_csv(dokument, separator=";", encoding="windows-1252", dtypes={
+            "Beløp inn": pl.Decimal(10, 2),
+            "Beløp ut": pl.Decimal(10, 2),
+        })
+        
+        # burde passe på at valuta er riktig, men idk
+
+        # finn inngående saldo
+        try:  # hvis du har en bedre måte å gjøre dette på, fortell meg!!!
+            inngående_ting = df.filter(pl.col("Utført dato").str.contains("Inngående saldo pr."))
+            inngående_saldo = inngående_ting["Rentedato"][0].replace(" ", "").replace(",", ".").replace(" NOK", "")
+            inngående_saldo = Decimal(inngående_saldo)
+            inngående_dato = re.findall(date_pattern, inngående_ting["Utført dato"][0])[0]
+            inngående_dato = dt.datetime(int(inngående_dato[2]), int(inngående_dato[1]), int(inngående_dato[0])).date()
+        except Exception as e:
+            print("Kunne ikke finne inngående saldo/dato!", e)
+            inngående_saldo = Decimal(0)
+            inngående_dato = dt.datetime(1970, 1, 1).date()
+        inngående_saldoer += inngående_saldo
+        df_list.append(df)
+
+    df = pl.concat(df_list)
+    # parse dates
+    # vi bruker utført dato her, siden transaksjonen trenger ikke alltid være bokført enda. 
+    # Kan vurdere å evt. differensiere med dette senere, men dette verktøyet
+    # er hovedsakelig ment for å være regnskapsverktøy. Idk, får se~
+    df = df.with_columns(
+        pl.col("Utført dato").str.strptime(pl.Date, format=("%d.%m.%Y"), strict=False).alias("Utført dato")
+    ).sort("Utført dato")
+
+    # fjern ubrukelige rows
+    df = df.drop_nulls(subset=["Utført dato"])
+
+    # jeg klarte ikke å sette inngående saldo først... 
+
+    # finn løpende saldo
+    df = df.with_columns(
+        ((pl.col("Beløp ut").fill_null(0) + pl.col("Beløp inn").fill_null(0)).cum_sum()).alias("inn_ut")
+    )
+
+    df = df.with_columns(
+        (pl.col("inn_ut") + inngående_saldoer).alias("inn_ut")
+    )
+
+    df = df.with_columns(
+        pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
+    )
+
+    df_categories: pl.DataFrame = df.group_by("category").agg(
+        pl.sum("inn_ut").alias("total_amount")
+    ).sort("total_amount")
+
+    datoer = df["Utført dato"].to_list()
+    inn_ut = df["inn_ut"].to_list()
+
+    fig, ax = plt.subplots(1, 2, figsize=(10, 6))
+    ax[0].plot(datoer, inn_ut, label="Saldo i banken")
+    ax[0].fill_between(datoer, inn_ut, alpha=0.3)
+    
+    categories_list = df_categories["category"].to_list()
+    categories_sums = df_categories["total_amount"].to_list()
+    ax[1].bar(categories_list, categories_sums, label="bar chart")
+
+    plt.show()
+
+
+def _graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
+    """ Deprecated: Read the created csv list and graph everything """
 
     skip_words = ["Overført", "favør", "omkostninger", "ikke bokført"]
     category_counts = {}
@@ -37,6 +126,8 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     datoer = []
     referanser = []
     saldo_inn_ut = []
+    nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
+    # kontonummer er alle koblet til barna sine
     for dokument in files:
         totalt_inn_måned = Decimal("0")
         totalt_ut_måned = Decimal("0")
@@ -90,6 +181,13 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
                 dato = current_year + bokført[2:4] + bokført[0:2]
                 # sjekk om infoen stemmer overens med kategoriene:
                 category = categorize_transaction(forklaring, categories)
+                print(dato, forklaring, referanse)
+                if "Renter og provisjon" in forklaring or "i år" in forklaring:
+                    dato += "0101"
+
+                if len(dato) != 8:
+                    dato += "0101"
+                    
                 date_now = dt.datetime.strptime(str(dato), "%Y%m%d")
 
                 if ut != "" and duration[0] <= date_now <= duration[1]:
@@ -140,10 +238,9 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     datoer = datoer[start_i:end_i]
     inn_ut = inn_ut[start_i:end_i]
 
-    # print(category_counts)
-    # møter nå på problemet av at det ikke er noen datapunkter mellom 31 januar 2024, og 30 august 2024.
-    # disse datapunktene har fått feil dato, da jeg ikke har noen dato før august 2024 (tror jeg)
-    # print(list(zip(datoer, inn_ut)))
+    G = nx.Graph()
+    # gå igjennom nodes osv.
+
     plt.plot(datoer, inn_ut)
     plt.fill_between(datoer, inn_ut, alpha=0.3)
     plt.xticks(rotation=45)

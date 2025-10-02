@@ -17,3 +17,4 @@ Generelle unådde mål:
 - Analysere en spesifisert periode
 - Lage bedre oversikt over leste dokumenter og periodene deres
 - Legge til støtte for kombinerte dokumenter
+- Støtte andre skriftspråk?

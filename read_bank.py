@@ -4,6 +4,8 @@ import re
 import hashlib
 import os
 import main
+import shutil
+from pathlib import Path
 
 
 def hash_file(file_path, chunk_size=8192):
@@ -18,6 +20,16 @@ def hash_file(file_path, chunk_size=8192):
         return None  # the file has already been processed
 
     return hash
+
+
+def read_eika_csv(file_path=None):
+    hash = hash_file(file_path)
+    if hash is None:
+        return f"Fil: {file_path} har allerede blitt prosessert!"
+    
+    csv_destination_name = f"./csv_data/{hash}.csv"
+    csv_path = Path(csv_destination_name)
+    shutil.copy(file_path, csv_path)
 
 
 def read_eika(file_path=None):

@@ -32,14 +32,17 @@ class BaseApp(tk.Tk):
 
         self.status_label = ttk.Label(self.left_frame, text="Status")
         self.status_label.pack(pady=5)
-        self.status_text = tk.Text(self.left_frame, height=50, width=50)
+        self.status_text = tk.Text(self.left_frame, height=20, width=50)
         self.status_text.pack(pady=5)
 
         self.processed_files_label = ttk.Label(self.right_frame, text="Prosesserte filer: 0")
         self.processed_files_label.pack(pady=5)
 
-        self.files_button = ttk.Button(self.right_frame, text="Velg kontoutskrifter", command=self.on_files_button)
-        self.files_button.pack(pady=5)
+        # self.files_button = ttk.Button(self.right_frame, text="Velg kontoutskrifter (PDFer - beta)", command=self.on_files_button)
+        # self.files_button.pack(pady=5)
+
+        self.csv_files_btn = ttk.Button(self.right_frame, text="Velg CSVer", command=self.on_csv_button)
+        self.csv_files_btn.pack(pady=5)
 
         self.clear_csv_btn = ttk.Button(self.right_frame, text="Slett prosesserte data", command=self.on_clear_csv)
         self.clear_csv_btn.pack(pady=5)
@@ -75,6 +78,22 @@ class BaseApp(tk.Tk):
         # read the files and convert them to csv's. 
         for file in files:
             status = read_bank.read_eika(file)
+            self.status_text.insert(tk.END, status)
+        
+        self.update_processed_files()
+
+    def on_csv_button(self):
+        files = filedialog.askopenfilenames(
+            title="Velg kontoutskrifter",
+            filetypes=(("CSV-filer", "*.csv"), ("Alle filer", "*.*")))
+
+        if not files:
+            self.status_text.insert(tk.END, "Du valgte ingen filer!")
+            return
+        
+        # read the files and convert them to csv's. 
+        for file in files:
+            status = read_bank.read_eika_csv(file)
             self.status_text.insert(tk.END, status + "\n")
         
         self.update_processed_files()
