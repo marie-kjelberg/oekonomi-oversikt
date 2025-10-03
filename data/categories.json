@@ -11,10 +11,12 @@
         "7-Eleven",
         "Mix",
         "Deli de Luca",
-        "Extra"
+        "Extra",
+        "Spydeberg Baker"
     ],
     "husholdning": [
         "Europris",
+        "Grensen 13",
         "Clas",
         "Jernia",
         "Obs",
@@ -26,7 +28,11 @@
         "Plantasjen",
         "Power",
         "Elkjøp",
-        "Princh Bibliotek"
+        "Princh Bibliotek",
+        "Proton",
+        "Rusta",
+        "Elkjop",
+        "Sostrene Grene"
     ],
     "hobby": [
         "Gear4Music",
@@ -103,7 +109,8 @@
         "Jordb\u00e6rpikene",
         "Starbucks",
         "Espresso House",
-        "Wayne's Coffee"
+        "Wayne's Coffee",
+        "Hjerterommet"
     ],
     "helse": [
         "SATSELIXIA",
@@ -116,7 +123,9 @@
         "Tannlege",
         "Legekontor",
         "Sykehuset i",
-        "Medical"
+        "Medical",
+        "Øre nese",
+        "Lille grensen l"
     ],
     "ferie": [
         "Airbnb",
@@ -147,7 +156,8 @@
         "Telenor"
     ],
     "husleie": [
-        "Studentsamskipnaden"
+        "Studentsamskipnaden",
+        "STUDENTSAMSKIPN"
     ],
     "lån": [
         "Statens Lånekasse"
@@ -156,6 +166,7 @@
         "Lønn"
     ],
     "bank": [
-        "kort"
+        "kort",
+        "omkostninger"
     ]
 }

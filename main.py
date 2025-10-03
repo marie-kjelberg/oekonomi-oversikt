@@ -21,6 +21,10 @@ class BaseApp(tk.Tk):
         frame = ttk.Frame(self, padding=10)
         frame.pack(fill="both", expand=True)
 
+        self.style = ttk.Style()
+        if "xpnative" in self.style.theme_names():
+            self.style.theme_use("xpnative")
+
         self.title_label = ttk.Label(frame, text="Økonomi styring", font=("Helvetica", 24, "bold"))
         self.title_label.pack(pady=5)
 
@@ -46,8 +50,13 @@ class BaseApp(tk.Tk):
 
         self.set_dates_label = ttk.Label(self.right_frame, text="Velg dato (dd-mm-yyyy:dd-mm-yyyy):")
         self.set_dates_label.pack(pady=5)
-        self.set_dates_input = tk.Entry(self.right_frame)
+        self.set_dates_input = ttk.Entry(self.right_frame)
         self.set_dates_input.pack(pady=5)
+
+        self.name_ignore_label = ttk.Label(self.right_frame, text="Navnet ditt (for å ignorere interne overføringer)")
+        self.name_ignore_label.pack(pady=5)
+        self.name_to_ignore = tk.Entry(self.right_frame)
+        self.name_to_ignore.pack(pady=5)
 
         self.make_graphs_btn = ttk.Button(self.right_frame, text="Lag grafer!", command=self.on_make_graphs)
         self.make_graphs_btn.pack(pady=5)
@@ -69,13 +78,13 @@ class BaseApp(tk.Tk):
             filetypes=(("CSV-filer", "*.csv"), ("Alle filer", "*.*")))
 
         if not files:
-            self.status_text.insert(tk.END, "Du valgte ingen filer!")
+            self.status_text.insert(tk.END, "Du valgte ingen filer!\n")
             return
         
         # read the files and convert them to csv's. 
         for file in files:
             status = read_bank.read_eika_csv(file)
-            self.status_text.insert(tk.END, str(status))
+            self.status_text.insert(tk.END, str(status), "\n")
         
         self.update_processed_files()
 
@@ -85,7 +94,7 @@ class BaseApp(tk.Tk):
             if file_path.lower().endswith(".csv"):
                 os.remove(file_path)
         
-        self.status_text.insert(tk.END, "Slettet alle prosesserte data!")
+        self.status_text.insert(tk.END, "Slettet alle prosesserte data!\n")
         self.update_processed_files()
 
     def on_make_graphs(self):
@@ -110,9 +119,9 @@ class BaseApp(tk.Tk):
                 files.append(file_path)
 
         if len(files) != 0:
-            read_csv.graph_everything(files, duration)
+            read_csv.graph_everything(files, duration, self.name_to_ignore.get())
         else:
-            self.status_text.insert(tk.END, "Kunne ikke lage grafer, da ingen filer er prosesserte!")
+            self.status_text.insert(tk.END, "Kunne ikke lage grafer, da ingen filer er prosesserte!\n")
 
 
 def main():
