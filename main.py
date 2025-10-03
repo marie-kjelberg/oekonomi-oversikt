@@ -22,8 +22,8 @@ class BaseApp(tk.Tk):
         frame.pack(fill="both", expand=True)
 
         self.style = ttk.Style()
-        print(self.style.theme_names())
-        self.style.theme_use("xpnative")
+        if "xpnative" in self.style.theme_names():
+            self.style.theme_use("xpnative")
 
         self.title_label = ttk.Label(frame, text="Økonomi styring", font=("Helvetica", 24, "bold"))
         self.title_label.pack(pady=5)
