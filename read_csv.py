@@ -33,7 +33,7 @@ def categorize_transaction(transaction: str, categories: dict = categories) -> s
     return "uncategorized"
 
 
-def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
+def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1)), name_to_ignore=""):
     """ The newer version. Assumes Eika's specs for csv's. """
     # for grafen
     inn_ut = []
@@ -46,9 +46,7 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
             "Beløp inn": pl.Decimal(10, 2),
             "Beløp ut": pl.Decimal(10, 2),
         })
-        
         # burde passe på at valuta er riktig, men idk
-
         # finn inngående saldo
         try:  # hvis du har en bedre måte å gjøre dette på, fortell meg!!!
             inngående_ting = df.filter(pl.col("Utført dato").str.contains("Inngående saldo pr."))
@@ -83,10 +81,13 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
         pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
     )
 
+    # filtrer bort interne overføringer
+    if name_to_ignore != "":
+        df = df.filter(pl.col("Beskrivelse") != name_to_ignore)
+
     df_categories: pl.DataFrame = df.group_by("category").agg(
         (-1 * pl.sum("Beløp ut") + pl.sum("Beløp inn")).alias("total_amount")
     ).sort("total_amount")
-    print(df_categories.head())
 
     # jeg klarte ikke å sette inngående saldo først...
     # finn løpende saldo
@@ -124,18 +125,22 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     # df_copy = df.clone()
     df = df.drop_nulls(subset=["Fra konto"])
 
-    # df_copy.drop_nulls(subset=["Til konto"])
-    # print(df_copy.head())
-
     edges = list(zip(df["Fra konto"].to_list(), df["category"].to_list()))
     G.add_edges_from(edges)
-    pos = nx.spring_layout(G)
+    node_sizes = []
+    for node in G.nodes():
+        amount = df_categories.filter(pl.col("category") == node).select(pl.col("total_amount"))
+        if amount.shape == (1, 1):
+            node_sizes.append(float(amount.item()) * 0.1)
+        else:
+            node_sizes.append(100)
+    pos = nx.spring_layout(G, k=1.15, iterations=200)
     nx.draw(
         G,
         pos,
         with_labels=True,
+        node_size=node_sizes
     )
-
     plt.show()
 
 
