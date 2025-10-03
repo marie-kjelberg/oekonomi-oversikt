@@ -1,8 +1,13 @@
-import csv
+"""
+    File for reading and graphing the data in the processed csv's.
+
+    Includes the following functions:
+    - `categorize_transaction`
+    - `graph_everything`
+"""
 import json
 from decimal import Decimal  # for å unngå flytpunktsfeil, slik som 5152.200000000001
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import re
 import datetime as dt
 import main
@@ -29,14 +34,10 @@ def categorize_transaction(transaction: str, categories: dict = categories) -> s
 
 
 def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
-    """ The newer version """
-    category_counts = {}
-
+    """ The newer version. Assumes Eika's specs for csv's. """
     # for grafen
     inn_ut = []
     datoer = []
-    nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
-    # kontonummer er alle koblet til barna sine
     df_list = []
     inngående_saldoer = Decimal("0")
     for dokument in files:
@@ -129,7 +130,6 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     edges = list(zip(df["Fra konto"].to_list(), df["category"].to_list()))
     G.add_edges_from(edges)
     pos = nx.spring_layout(G)
-    # ax2 = fig.add_subplot(gs[1, 0])
     nx.draw(
         G,
         pos,
