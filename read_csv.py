@@ -100,7 +100,6 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     datoer = df["Utført dato"].to_list()
     inn_ut = df["inn_ut"].to_list()
 
-    # ax0 = fig.add_subplot(gs[0, 0])¨
     plt.figure()
     plt.plot(datoer, inn_ut, label="Saldo i banken")
     plt.fill_between(datoer, inn_ut, alpha=0.3)
@@ -110,12 +109,12 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
 
     categories_list = df_categories["category"].to_list()
     categories_sums = df_categories["total_amount"].to_list()
-    # ax1 = fig.add_subplot(gs[0, 1])
     plt.figure()
     plt.bar(categories_list, categories_sums, label="bar chart")
     plt.title("Inn/ut kategorisert")
     plt.xlabel("Kategorier")
     plt.ylabel("NOK")
+    plt.xticks(rotation=45, ha="right")
 
     plt.figure()
     G = nx.DiGraph()
