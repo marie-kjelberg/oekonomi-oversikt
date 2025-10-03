@@ -30,6 +30,7 @@ def read_eika_csv(file_path=None):
     csv_destination_name = f"./csv_data/{hash}.csv"
     csv_path = Path(csv_destination_name)
     shutil.copy(file_path, csv_path)
+    return f"Fil {file_path} har blitt prosessert!"
 
 
 def read_eika(file_path=None):

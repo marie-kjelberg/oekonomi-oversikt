@@ -75,7 +75,7 @@ class BaseApp(tk.Tk):
         # read the files and convert them to csv's. 
         for file in files:
             status = read_bank.read_eika_csv(file)
-            self.status_text.insert(tk.END, status + "\n")
+            self.status_text.insert(tk.END, str(status))
         
         self.update_processed_files()
 
