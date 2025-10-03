@@ -81,11 +81,13 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
         pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
     )
 
-    # filtrer bort interne overføringer
+    # filtrer bort interne overføringer. saldo plot krever at de interne overføringene er intakte,
+    # og derfor eksisterer `df_no_internal` for de andre grafene som krever at det ikke er tilstede
+    df_no_internal: pl.DataFrame = df
     if name_to_ignore != "":
-        df = df.filter(pl.col("Beskrivelse") != name_to_ignore)
+        df_no_internal = df.filter(pl.col("Beskrivelse") != name_to_ignore)
 
-    df_categories: pl.DataFrame = df.group_by("category").agg(
+    df_categories: pl.DataFrame = df_no_internal.group_by("category").agg(
         (-1 * pl.sum("Beløp ut") + pl.sum("Beløp inn")).alias("total_amount")
     ).sort("total_amount")
 
