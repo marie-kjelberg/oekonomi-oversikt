@@ -2,7 +2,6 @@ import os
 from tkinter import filedialog
 import read_bank
 import read_csv
-import re
 import datetime as dt
 import customtkinter as ctk
 import customcomponents as cc

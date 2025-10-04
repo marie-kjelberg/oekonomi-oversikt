@@ -10,11 +10,10 @@ Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over 
 
 Generelle unådde mål: 
 - Lage en struktur hvor du kan lagre alt du har gjort i et "prosjekt", og åpne det senere
-- Rework `read_bank.py`
 - Legg til prosent oversikt
-- Sammenlign en periode med en annen automatisk
 - Sørge for at samme periode på samme konto ikke blir lest 2 ganger selv om det er forskjellige dokumenter
-- Analysere en spesifisert periode
 - Lage bedre oversikt over leste dokumenter og periodene deres
-- Legge til støtte for kombinerte dokumenter
 - Støtte andre skriftspråk?
+
+## Annerkjennelser:
+Takk til alle som har skrevet biblioteken jeg har brukt i dette prosjektet. Spesielt takk til [h4pZ](https://github.com/h4pZ/rose-pine-matplotlib) for å gitt et pyplot tema som gjør grafene mine litt penere.

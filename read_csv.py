@@ -101,6 +101,9 @@ def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1
         (pl.col("inn_ut") + inngående_saldoer).alias("inn_ut")
     )
 
+    plt_style = "./pyplot_themes/rose-pine-moon.mplstyle"
+    plt.style.use(plt_style)
+
     datoer = df["Utført dato"].to_list()
     inn_ut = df["inn_ut"].to_list()
 
@@ -137,12 +140,19 @@ def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1
         else:
             node_sizes.append(100)
     pos = nx.spring_layout(G, k=1.15, iterations=200)
-    nx.draw(
-        G,
-        pos,
-        with_labels=True,
-        node_size=node_sizes
-    )
+
+    with plt.style.context(plt_style):
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_size=node_sizes,
+            font_size=10,
+            width=1.5,
+            arrows=True,
+            arrowstyle="-|>",
+            arrowsize=12
+        )
     plt.show()
 
 
