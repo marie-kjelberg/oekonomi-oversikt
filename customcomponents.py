@@ -59,3 +59,19 @@ class CTkDateSelector(ctk.CTkFrame):
         self.day_box.set(str(date.day).zfill(2))
         self.month_box.set(str(date.month).zfill(2))
         self.year_box.set(str(date.year))
+
+
+class CTkTextbox(ctk.CTkTextbox):
+    def __init__(self, master, initial_text="", editiable_by_user=False, height=200, width=500, **kwargs):
+        super().__init__(master, **kwargs)
+        self.editable_by_user = editiable_by_user
+
+        self.insert(ctk.END, initial_text)
+        if not editiable_by_user:
+            self.configure(state="disabled")
+
+    def append_text(self, text: str):
+        self.configure(state="normal")
+        self.insert(ctk.END, text)
+        if not self.editable_by_user:
+            self.configure(state="disabled")

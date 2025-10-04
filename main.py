@@ -34,7 +34,8 @@ class BaseApp(ctk.CTk):
 
         self.status_label = ctk.CTkLabel(self.left_frame, text="Status")
         self.status_label.pack(pady=5)
-        self.status_text = ctk.CTkTextbox(self.left_frame, height=200, width=500)
+        self.status_text = cc.CTkTextbox(self.right_frame)
+        self.status_text = cc.CTkTextbox(self.left_frame, height=200, width=500)
         self.status_text.pack(pady=5)
 
         self.processed_files_label = ctk.CTkLabel(self.right_frame, text="Prosesserte filer: 0")
@@ -83,13 +84,13 @@ class BaseApp(ctk.CTk):
             filetypes=(("CSV-filer", "*.csv"), ("Alle filer", "*.*")))
 
         if not files:
-            self.status_text.insert(ctk.END, "Du valgte ingen filer!\n")
+            self.status_text.append_text("Du valgte ingen filer!\n")
             return
         
         # read the files and convert them to csv's. 
         for file in files:
             status = read_bank.read_eika_csv(file)
-            self.status_text.insert(ctk.END, str(status), "\n")
+            self.status_text.append_text(str(status) + "\n")
         
         self.update_processed_files()
 
@@ -99,12 +100,12 @@ class BaseApp(ctk.CTk):
             if file_path.lower().endswith(".csv"):
                 os.remove(file_path)
         
-        self.status_text.insert(ctk.END, "Slettet alle prosesserte data!\n")
+        self.status_text.append_text("Slettet alle prosesserte data!\n")
         self.update_processed_files()
 
     def on_make_graphs(self):
         """ Makes graphs (or something) """
-        self.status_text.insert(ctk.END, "Lager grafer!")
+        self.status_text.append_text("Lager grafer!")
 
         start_date = self.start_date.get_date()
         end_date = self.end_date.get_date()
@@ -122,7 +123,7 @@ class BaseApp(ctk.CTk):
         if len(files) != 0:
             read_csv.graph_everything(files, duration, self.name_to_ignore.get())
         else:
-            self.status_text.insert(ctk.END, "Kunne ikke lage grafer, da ingen filer er prosesserte!\n")
+            self.status_text.append_text("Kunne ikke lage grafer, da ingen filer er prosesserte!\n")
 
 
 def main():
