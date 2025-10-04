@@ -33,7 +33,7 @@ def categorize_transaction(transaction: str, categories: dict = categories) -> s
     return "uncategorized"
 
 
-def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1)), name_to_ignore=""):
+def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1, 1)), name_to_ignore=""):
     """ The newer version. Assumes Eika's specs for csv's. """
     # for grafen
     inn_ut = []
@@ -74,8 +74,8 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     df: pl.DataFrame = df.drop_nulls(subset=["Utført dato"])
 
     # filtrer bort uønskede datoer
-    df = df.filter(duration[0].date() < pl.col("Utført dato"))
-    df = df.filter(duration[1].date() > pl.col("Utført dato"))
+    df = df.filter(duration[0] < pl.col("Utført dato"))
+    df = df.filter(duration[1] > pl.col("Utført dato"))
 
     df = df.with_columns(
         pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
@@ -100,6 +100,9 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     df = df.with_columns(
         (pl.col("inn_ut") + inngående_saldoer).alias("inn_ut")
     )
+
+    plt_style = "./pyplot_themes/rose-pine-moon.mplstyle"
+    plt.style.use(plt_style)
 
     datoer = df["Utført dato"].to_list()
     inn_ut = df["inn_ut"].to_list()
@@ -137,12 +140,19 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
         else:
             node_sizes.append(100)
     pos = nx.spring_layout(G, k=1.15, iterations=200)
-    nx.draw(
-        G,
-        pos,
-        with_labels=True,
-        node_size=node_sizes
-    )
+
+    with plt.style.context(plt_style):
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_size=node_sizes,
+            font_size=10,
+            width=1.5,
+            arrows=True,
+            arrowstyle="-|>",
+            arrowsize=12
+        )
     plt.show()
 
 
