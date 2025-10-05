@@ -123,11 +123,10 @@ def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1
     plt.ylabel("NOK")
     plt.xticks(rotation=45, ha="right")
 
-    plt.figure()
+    fig_network = plt.figure()
     G = nx.DiGraph()
     # nodes burde være fra konto + kategorier. så kan add_adges være de ulike kategoriserte transaksjonene + evt.
     # til en konto hvis det er der. Hvis det går inn, så kan man heller ha fra deres konto til vår
-    # df_copy = df.clone()
     df = df.drop_nulls(subset=["Fra konto"])
 
     edges = list(zip(df["Fra konto"].to_list(), df["category"].to_list()))
@@ -140,19 +139,24 @@ def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1
         else:
             node_sizes.append(100)
     pos = nx.spring_layout(G, k=1.15, iterations=200)
+    
+    nx.draw(
+        G,
+        pos,
+        with_labels=True,
+        node_size=node_sizes,
+        font_size=10,
+        width=1.5,
+        arrows=True,
+        arrowstyle="-|>",
+        arrowsize=12,
+        node_color="#eb6f92",
+        font_color="#faf4ed",
+        edge_color="#b4637a",
+        font_weight="light"
+    )
 
-    with plt.style.context(plt_style):
-        nx.draw(
-            G,
-            pos,
-            with_labels=True,
-            node_size=node_sizes,
-            font_size=10,
-            width=1.5,
-            arrows=True,
-            arrowstyle="-|>",
-            arrowsize=12
-        )
+    fig_network.patch.set_facecolor("#26233a")
     plt.show()
 
 
