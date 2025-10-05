@@ -1,8 +1,13 @@
-import csv
+"""
+    File for reading and graphing the data in the processed csv's.
+
+    Includes the following functions:
+    - `categorize_transaction`
+    - `graph_everything`
+"""
 import json
 from decimal import Decimal  # for å unngå flytpunktsfeil, slik som 5152.200000000001
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import re
 import datetime as dt
 import main
@@ -28,15 +33,11 @@ def categorize_transaction(transaction: str, categories: dict = categories) -> s
     return "uncategorized"
 
 
-def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime(2050, 1, 1))):
-    """ The newer version """
-    category_counts = {}
-
+def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1, 1)), name_to_ignore=""):
+    """ The newer version. Assumes Eika's specs for csv's. """
     # for grafen
     inn_ut = []
     datoer = []
-    nodes = {}  # {"<kontonummer>: {"amzn": 199}"}
-    # kontonummer er alle koblet til barna sine
     df_list = []
     inngående_saldoer = Decimal("0")
     for dokument in files:
@@ -45,9 +46,7 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
             "Beløp inn": pl.Decimal(10, 2),
             "Beløp ut": pl.Decimal(10, 2),
         })
-        
         # burde passe på at valuta er riktig, men idk
-
         # finn inngående saldo
         try:  # hvis du har en bedre måte å gjøre dette på, fortell meg!!!
             inngående_ting = df.filter(pl.col("Utført dato").str.contains("Inngående saldo pr."))
@@ -75,17 +74,22 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
     df: pl.DataFrame = df.drop_nulls(subset=["Utført dato"])
 
     # filtrer bort uønskede datoer
-    df = df.filter(duration[0].date() < pl.col("Utført dato"))
-    df = df.filter(duration[1].date() > pl.col("Utført dato"))
+    df = df.filter(duration[0] < pl.col("Utført dato"))
+    df = df.filter(duration[1] > pl.col("Utført dato"))
 
     df = df.with_columns(
         pl.col("Beskrivelse").map_elements(categorize_transaction).alias("category")
     )
 
-    df_categories: pl.DataFrame = df.group_by("category").agg(
+    # filtrer bort interne overføringer. saldo plot krever at de interne overføringene er intakte,
+    # og derfor eksisterer `df_no_internal` for de andre grafene som krever at det ikke er tilstede
+    df_no_internal: pl.DataFrame = df
+    if name_to_ignore != "":
+        df_no_internal = df.filter(pl.col("Beskrivelse") != name_to_ignore)
+
+    df_categories: pl.DataFrame = df_no_internal.group_by("category").agg(
         (-1 * pl.sum("Beløp ut") + pl.sum("Beløp inn")).alias("total_amount")
     ).sort("total_amount")
-    print(df_categories.head())
 
     # jeg klarte ikke å sette inngående saldo først...
     # finn løpende saldo
@@ -97,10 +101,12 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
         (pl.col("inn_ut") + inngående_saldoer).alias("inn_ut")
     )
 
+    plt_style = "./pyplot_themes/rose-pine-moon.mplstyle"
+    plt.style.use(plt_style)
+
     datoer = df["Utført dato"].to_list()
     inn_ut = df["inn_ut"].to_list()
 
-    # ax0 = fig.add_subplot(gs[0, 0])¨
     plt.figure()
     plt.plot(datoer, inn_ut, label="Saldo i banken")
     plt.fill_between(datoer, inn_ut, alpha=0.3)
@@ -110,33 +116,47 @@ def graph_everything(files: list, duration=(dt.datetime(2023, 5, 1), dt.datetime
 
     categories_list = df_categories["category"].to_list()
     categories_sums = df_categories["total_amount"].to_list()
-    # ax1 = fig.add_subplot(gs[0, 1])
     plt.figure()
     plt.bar(categories_list, categories_sums, label="bar chart")
     plt.title("Inn/ut kategorisert")
     plt.xlabel("Kategorier")
     plt.ylabel("NOK")
+    plt.xticks(rotation=45, ha="right")
 
-    plt.figure()
+    fig_network = plt.figure()
     G = nx.DiGraph()
     # nodes burde være fra konto + kategorier. så kan add_adges være de ulike kategoriserte transaksjonene + evt.
     # til en konto hvis det er der. Hvis det går inn, så kan man heller ha fra deres konto til vår
-    # df_copy = df.clone()
     df = df.drop_nulls(subset=["Fra konto"])
-
-    # df_copy.drop_nulls(subset=["Til konto"])
-    # print(df_copy.head())
 
     edges = list(zip(df["Fra konto"].to_list(), df["category"].to_list()))
     G.add_edges_from(edges)
-    pos = nx.spring_layout(G)
-    # ax2 = fig.add_subplot(gs[1, 0])
+    node_sizes = []
+    for node in G.nodes():
+        amount = df_categories.filter(pl.col("category") == node).select(pl.col("total_amount"))
+        if amount.shape == (1, 1):
+            node_sizes.append(float(amount.item()) * 0.1)
+        else:
+            node_sizes.append(100)
+    pos = nx.spring_layout(G, k=1.15, iterations=200)
+    
     nx.draw(
         G,
         pos,
         with_labels=True,
+        node_size=node_sizes,
+        font_size=10,
+        width=1.5,
+        arrows=True,
+        arrowstyle="-|>",
+        arrowsize=12,
+        node_color="#eb6f92",
+        font_color="#faf4ed",
+        edge_color="#b4637a",
+        font_weight="light"
     )
 
+    fig_network.patch.set_facecolor("#26233a")
     plt.show()
 
 
