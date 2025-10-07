@@ -5,6 +5,7 @@ import read_csv
 import datetime as dt
 import customtkinter as ctk
 import customcomponents as cc
+import make_preview_data
 
 csv_data_path = "./csv_data/"
 
@@ -46,13 +47,13 @@ class BaseApp(ctk.CTk):
         self.clear_csv_btn = ctk.CTkButton(self.right_frame, text="Slett prosesserte data", command=self.on_clear_csv)
         self.clear_csv_btn.pack(pady=5)
 
-        self.start_date_label = ctk.CTkLabel(self.right_frame, text="Analyser fra dato (ddmmyyyy):")
+        self.start_date_label = ctk.CTkLabel(self.right_frame, text="Analyser fra dato (ddmmåååå):")
         self.start_date_label.pack(pady=5)
         self.start_date = cc.CTkDateSelector(self.right_frame)
         self.start_date.set_date(dt.date(2000, 1, 1))
         self.start_date.pack(pady=5)
 
-        self.end_date_label = ctk.CTkLabel(self.right_frame, text="Analyser til dato (ddmmyyyy):")
+        self.end_date_label = ctk.CTkLabel(self.right_frame, text="Analyser til dato (ddmmåååå):")
         self.end_date_label.pack(pady=5)
         self.end_date = cc.CTkDateSelector(self.right_frame)
         self.end_date.set_date(dt.date(2100, 1, 1))

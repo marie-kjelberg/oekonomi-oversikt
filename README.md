@@ -9,6 +9,11 @@ Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over 
 3. Trykk på nedlastningsknappen (ofte et symbol)
 4. Velg "csv-format" eller noe lignene, og last ned
 
+![Stople graf](images/bar.png)
+![Nettverks graf](images/netverk.png)
+![Saldo graf](images/saldo.png)
+![Brukergrensesnitt](images/UI.png)
+
 ## Hvordan kjøre programmet? 
 1. Installer Python [her](https://www.python.org/)
 2. Kjør `python install -r requirements.txt` i terminalen i denne mappen
