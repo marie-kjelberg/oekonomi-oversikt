@@ -3,6 +3,11 @@ Få oversikt over økonomien din
 
 Dette er bare et lite hobbyprosjekt jeg har for å få oversikt over saldo over ting, samt hva jeg faktisk bruker pengene mine på. Man kan kjøre `main.py` for å starte programmet. Dette programmet er mest tilrettelagt Eika sine kontoutskrifter, men man kan modifisere koden til å tilrettelegge for andre banker sine kontoutskrifter dersom man vil. 
 
+![Stople graf](images/bar.png)
+![Nettverks graf](images/netverk.png)
+![Saldo graf](images/saldo.png)
+![Brukergrensesnitt](images/UI.png)
+
 ## Hvordan kjøre programmet? 
 1. Installer Python [her](https://www.python.org/)
 2. Kjør `python install -r requirements.txt` i terminalen i denne mappen

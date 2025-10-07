@@ -5,7 +5,6 @@
     - `categorize_transaction`
     - `graph_everything`
 """
-import json
 from decimal import Decimal  # for å unngå flytpunktsfeil, slik som 5152.200000000001
 import matplotlib.pyplot as plt
 import re
@@ -13,15 +12,10 @@ import datetime as dt
 import main
 import networkx as nx
 import polars as pl
+import get_app_data
 
 date_pattern = r'\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(\d{4})\b'
-
-categories_path = "./data/categories.json"
-categories_string = ""
-with open(categories_path, "r", encoding="utf-8") as file:
-    categories_string += file.read()
-
-categories = json.loads(categories_string)
+categories = get_app_data.get_categories()
 
 
 def categorize_transaction(transaction: str, categories: dict = categories) -> str:
@@ -57,7 +51,7 @@ def graph_everything(files: list, duration=(dt.date(2023, 5, 1), dt.date(2050, 1
         except Exception as e:
             print("Kunne ikke finne inngående saldo/dato!", e)
             inngående_saldo = Decimal(0)
-            inngående_dato = dt.datetime(1970, 1, 1).date()
+            inngående_dato = dt.date(1970, 1, 1)
         inngående_saldoer += inngående_saldo
         df_list.append(df)
 
